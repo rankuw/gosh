@@ -1,12 +1,20 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 )
 
 func main() {
-	var str string
 	fmt.Print("$ ")
-	fmt.Scanln(&str, "")
-	fmt.Println(str + ": command not found")
+
+	command, err := bufio.NewReader(os.Stdin).ReadString('\n')
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println(command[:len(command)-1] + ": command not found")
 }

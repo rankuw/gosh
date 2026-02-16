@@ -4,25 +4,42 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 )
 
 func main() {
-	fmt.Print("$ ")
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		fmt.Print("$ ")
 
-	command, err := bufio.NewReader(os.Stdin).ReadString('\n')
+		input, err := reader.ReadString('\n')
 
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		if err != nil {
+			if err.Error() == "EOF" {
+				os.Exit(0)
+			}
+
+			fmt.Println("Error reading input: ", err)
+			continue
+		}
+
+		input = strings.TrimSpace(input)
+		if input == "" {
+			continue
+		}
+
+		parts := strings.Fields(input)
+		cmd := parts[0]
+		args := parts[1:]
+
+		switch cmd {
+		case "exit":
+			os.Exit(0)
+		case "echo":
+			fmt.Println(strings.Join(args, " "))
+		default:
+			fmt.Println(cmd + ": command not found")
+		}
+
 	}
-
-	command = command[:len(command)-1]
-
-	if command == "exit" {
-		return
-	}
-
-	fmt.Println(command + ": command not found")
-	main()
-
 }

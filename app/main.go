@@ -9,6 +9,12 @@ import (
 	"strings"
 )
 
+const (
+	StatusExecutable   = 0
+	StatusNotFound     = 1
+	StatusUnExecutable = 2
+)
+
 func main() {
 	paths := os.Getenv("PATH")
 	pathsArray := strings.Split(paths, string(os.PathListSeparator))
@@ -49,10 +55,10 @@ func main() {
 				for _, path := range pathsArray {
 					fullPath := filepath.Join(path, param)
 					res := fileExistsAndPermission(fullPath)
-					if res == 0 {
+					if res == StatusExecutable {
 						fmt.Println(param, "is", fullPath)
 						break LoopLabel
-					} else if res == 1 {
+					} else if res == StatusNotFound {
 						continue
 					}
 				}
@@ -74,13 +80,13 @@ func fileExistsAndPermission(path string) int {
 	if err == nil {
 		mode := info.Mode()
 		if mode.Perm()&011 != 0 {
-			return 0
+			return StatusExecutable
 		}
-		return 2
+		return StatusUnExecutable
 	}
 	if errors.Is(err, os.ErrNotExist) {
-		return 1
+		return StatusNotFound
 	}
 
-	return 2
+	return StatusUnExecutable
 }

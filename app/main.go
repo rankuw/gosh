@@ -82,7 +82,7 @@ func main() {
 				if res == StatusExecutable {
 					// fmt.Println(param, "is", fullPath)
 
-					cmd := exec.Command(path, args...)
+					cmd := exec.Command(fullPath, args...)
 
 					if err := cmd.Run(); err != nil {
 						fmt.Println("Error", err)

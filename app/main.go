@@ -74,7 +74,7 @@ func main() {
 				fullPath := filepath.Join(path, cmd)
 				res := fileExistsAndPermission(fullPath)
 				if res == StatusExecutable {
-					cmd := exec.Command(path, args...)
+					cmd := exec.Command(cmd, args...)
 					output, err := cmd.Output()
 					if err != nil {
 						fmt.Println("Error", err)

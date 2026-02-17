@@ -48,7 +48,7 @@ func main() {
 				for _, path := range pathsArray {
 					res := fileExistsAndPermission(path + "/" + param)
 					if res == 0 {
-						fmt.Println(param, " is ", path+"/"+param)
+						fmt.Println(param, "is", path+"/"+param)
 						break LoopLabel
 					} else if res == 1 {
 						continue

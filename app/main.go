@@ -55,6 +55,7 @@ func main() {
 			} else {
 				for _, path := range pathsArray {
 					fullPath := filepath.Join(path, param)
+					fmt.Println(fullPath)
 					res := fileExistsAndPermission(fullPath)
 					if res == StatusExecutable {
 						// fmt.Println(param, "is", fullPath)

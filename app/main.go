@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -56,7 +57,13 @@ func main() {
 					fullPath := filepath.Join(path, param)
 					res := fileExistsAndPermission(fullPath)
 					if res == StatusExecutable {
-						fmt.Println(param, "is", fullPath)
+						// fmt.Println(param, "is", fullPath)
+
+						cmd := exec.Command(fullPath, args...)
+
+						if err := cmd.Run(); err != nil {
+							fmt.Println("Error", err)
+						}
 						break LoopLabel
 					} else if res == StatusNotFound {
 						continue

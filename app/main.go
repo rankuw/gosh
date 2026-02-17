@@ -55,7 +55,6 @@ func main() {
 			} else {
 				for _, path := range pathsArray {
 					fullPath := filepath.Join(path, param)
-					fmt.Println(fullPath)
 					res := fileExistsAndPermission(fullPath)
 					if res == StatusExecutable {
 						// fmt.Println(param, "is", fullPath)
@@ -77,6 +76,22 @@ func main() {
 		case "echo":
 			fmt.Println(strings.Join(args, " "))
 		default:
+			for _, path := range pathsArray {
+				fullPath := filepath.Join(path, cmd)
+				res := fileExistsAndPermission(fullPath)
+				if res == StatusExecutable {
+					// fmt.Println(param, "is", fullPath)
+
+					cmd := exec.Command(fullPath, args...)
+
+					if err := cmd.Run(); err != nil {
+						fmt.Println("Error", err)
+					}
+					break LoopLabel
+				} else if res == StatusNotFound {
+					continue
+				}
+			}
 			fmt.Println(cmd + ": command not found")
 		}
 

@@ -33,6 +33,17 @@ func main() {
 		args := parts[1:]
 
 		switch cmd {
+		case "type":
+			if len(args) == 0 {
+				continue
+			}
+			param := args[0]
+			fmt.Println(param, "This is the param")
+			if param == "type" || param == "exit" || param == "echo" {
+				fmt.Println(param + " is a shell builtin")
+			} else {
+				fmt.Println(param + ": not found")
+			}
 		case "exit":
 			os.Exit(0)
 		case "echo":

@@ -86,7 +86,7 @@ func fileExistsAndPermission(path string) int {
 	info, err := os.Stat(path)
 	if err == nil {
 		mode := info.Mode()
-		if mode.Perm()&011 != 0 {
+		if mode.Perm()&0111 != 0 {
 			return StatusExecutable
 		}
 		return StatusUnExecutable

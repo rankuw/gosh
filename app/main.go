@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -46,9 +47,10 @@ func main() {
 				fmt.Println(param + " is a shell builtin")
 			} else {
 				for _, path := range pathsArray {
-					res := fileExistsAndPermission(path + "/" + param)
+					fullPath := filepath.Join(path, param)
+					res := fileExistsAndPermission(fullPath)
 					if res == 0 {
-						fmt.Println(param, "is", path+"/"+param)
+						fmt.Println(param, "is", fullPath)
 						break LoopLabel
 					} else if res == 1 {
 						continue
@@ -68,9 +70,13 @@ func main() {
 }
 
 func fileExistsAndPermission(path string) int {
-	_, err := os.Stat(path)
+	info, err := os.Stat(path)
 	if err == nil {
-		return 0
+		mode := info.Mode()
+		if mode.Perm()&011 != 0 {
+			return 0
+		}
+		return 2
 	}
 	if errors.Is(err, os.ErrNotExist) {
 		return 1

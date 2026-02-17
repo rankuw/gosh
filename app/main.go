@@ -38,7 +38,6 @@ func main() {
 				continue
 			}
 			param := args[0]
-			fmt.Println(param, "This is the param")
 			if param == "type" || param == "exit" || param == "echo" {
 				fmt.Println(param + " is a shell builtin")
 			} else {

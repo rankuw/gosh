@@ -10,7 +10,7 @@ import (
 
 func main() {
 	paths := os.Getenv("PATH")
-	pathsArray := strings.Split(paths, ":")
+	pathsArray := strings.Split(paths, string(os.PathListSeparator))
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		fmt.Print("$ ")

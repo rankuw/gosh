@@ -75,11 +75,11 @@ func main() {
 				res := fileExistsAndPermission(fullPath)
 				if res == StatusExecutable {
 					cmd := exec.Command(fullPath, args...)
-					err, output := cmd.Output()
+					output, err := cmd.Output()
 					if err != nil {
 						fmt.Println("Error", err)
 					}
-					fmt.Println(output)
+					fmt.Println(string(output))
 					break LoopLabel
 				} else if res == StatusNotFound {
 					continue

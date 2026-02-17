@@ -2,12 +2,15 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
 )
 
 func main() {
+	paths := os.Getenv("PATH")
+	pathsArray := strings.Split(paths, ":")
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		fmt.Print("$ ")
@@ -32,6 +35,7 @@ func main() {
 		cmd := parts[0]
 		args := parts[1:]
 
+	LoopLabel:
 		switch cmd {
 		case "type":
 			if len(args) == 0 {
@@ -41,6 +45,15 @@ func main() {
 			if param == "type" || param == "exit" || param == "echo" {
 				fmt.Println(param + " is a shell builtin")
 			} else {
+				for _, path := range pathsArray {
+					res := fileExistsAndPermission(path + "/" + param)
+					if res == 0 {
+						fmt.Println(param, " is ", path+"/"+param)
+						break LoopLabel
+					} else if res == 1 {
+						continue
+					}
+				}
 				fmt.Println(param + ": not found")
 			}
 		case "exit":
@@ -52,4 +65,16 @@ func main() {
 		}
 
 	}
+}
+
+func fileExistsAndPermission(path string) int {
+	_, err := os.Stat(path)
+	if err == nil {
+		return 0
+	}
+	if errors.Is(err, os.ErrNotExist) {
+		return 1
+	}
+
+	return 2
 }

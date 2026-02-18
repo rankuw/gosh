@@ -60,10 +60,11 @@ func main() {
 		if handler, ok := builtins[cmd]; ok {
 			handler(args)
 		} else if _, err := exec.LookPath(cmd); err == nil {
-			cmd := exec.Command(cmd, args...)
-			cmd.Stdout = os.Stdout
-			cmd.Stdin = os.Stdin
-			cmd.Run()
+			command := exec.Command(cmd, args...)
+			command.Stdout = os.Stdout
+			command.Stdin = os.Stdin
+			command.Stderr = os.Stderr
+			command.Run()
 		} else {
 			fmt.Println(cmd + ": command not found")
 		}

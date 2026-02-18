@@ -18,6 +18,13 @@ func main() {
 		"echo": func(args []string) {
 			fmt.Println(strings.Join(args, " "))
 		},
+		"pwd": func(_ []string) {
+			command := exec.Command("pwd")
+			command.Stdout = os.Stdout
+			command.Stdin = os.Stdin
+			command.Stderr = os.Stderr
+			command.Run()
+		},
 	}
 
 	builtins["type"] = func(args []string) {

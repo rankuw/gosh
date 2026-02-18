@@ -2,24 +2,38 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 )
 
-const (
-	StatusExecutable   = 0
-	StatusNotFound     = 1
-	StatusUnExecutable = 2
-)
-
 func main() {
-	paths := os.Getenv("PATH")
-	pathsArray := strings.Split(paths, string(os.PathListSeparator))
 	reader := bufio.NewReader(os.Stdin)
+
+	builtins := map[string]func([]string){
+		"exit": func(_ []string) {
+			os.Exit(0)
+		},
+		"echo": func(args []string) {
+			fmt.Println(strings.Join(args, " "))
+		},
+	}
+
+	builtins["type"] = func(args []string) {
+		if len(args) == 0 {
+			return
+		}
+
+		command := args[0]
+		if _, ok := builtins[command]; ok {
+			fmt.Println(command + " is a shell builtin")
+		} else if path, err := exec.LookPath(command); err == nil {
+			fmt.Println(command + " is " + path)
+		} else {
+			fmt.Println(command + ": not found")
+		}
+	}
 	for {
 		fmt.Print("$ ")
 
@@ -43,66 +57,15 @@ func main() {
 		cmd := parts[0]
 		args := parts[1:]
 
-	LoopLabel:
-		switch cmd {
-		case "type":
-			if len(args) == 0 {
-				continue
-			}
-			param := args[0]
-			if param == "type" || param == "exit" || param == "echo" {
-				fmt.Println(param + " is a shell builtin")
-			} else {
-				for _, path := range pathsArray {
-					fullPath := filepath.Join(path, param)
-					res := fileExistsAndPermission(fullPath)
-					if res == StatusExecutable {
-						fmt.Println(param, "is", fullPath)
-						break LoopLabel
-					} else if res == StatusNotFound {
-						continue
-					}
-				}
-				fmt.Println(param + ": not found")
-			}
-		case "exit":
-			os.Exit(0)
-		case "echo":
-			fmt.Println(strings.Join(args, " "))
-		default:
-			for _, path := range pathsArray {
-				fullPath := filepath.Join(path, cmd)
-				res := fileExistsAndPermission(fullPath)
-				if res == StatusExecutable {
-					cmd := exec.Command(cmd, args...)
-					output, err := cmd.Output()
-					if err != nil {
-						fmt.Println("Error", err)
-					}
-					fmt.Print(string(output))
-					break LoopLabel
-				} else if res == StatusNotFound {
-					continue
-				}
-			}
+		if handler, ok := builtins[cmd]; ok {
+			handler(args)
+		} else if _, err := exec.LookPath(cmd); err == nil {
+			cmd := exec.Command(cmd, args...)
+			cmd.Stdout = os.Stdout
+			cmd.Stdin = os.Stdin
+			cmd.Run()
+		} else {
 			fmt.Println(cmd + ": command not found")
 		}
-
 	}
-}
-
-func fileExistsAndPermission(path string) int {
-	info, err := os.Stat(path)
-	if err == nil {
-		mode := info.Mode()
-		if mode.Perm()&0111 != 0 {
-			return StatusExecutable
-		}
-		return StatusUnExecutable
-	}
-	if errors.Is(err, os.ErrNotExist) {
-		return StatusNotFound
-	}
-
-	return StatusUnExecutable
 }

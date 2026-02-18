@@ -24,7 +24,7 @@ func main() {
 			command.Stdin = os.Stdin
 			command.Stderr = os.Stderr
 			if err := command.Run(); err != nil {
-				fmt.Println("err", "hello")
+				fmt.Println(err, "hello")
 			}
 		},
 	}

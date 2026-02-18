@@ -19,13 +19,8 @@ func main() {
 			fmt.Println(strings.Join(args, " "))
 		},
 		"pwd": func(_ []string) {
-			command := exec.Command("pwd")
-			command.Stdout = os.Stdout
-			command.Stdin = os.Stdin
-			command.Stderr = os.Stderr
-			if err := command.Run(); err != nil {
-				fmt.Println(err, "hello")
-			}
+			dir, _ := os.Getwd()
+			fmt.Println(dir)
 		},
 	}
 

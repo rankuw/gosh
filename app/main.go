@@ -23,7 +23,9 @@ func main() {
 			command.Stdout = os.Stdout
 			command.Stdin = os.Stdin
 			command.Stderr = os.Stderr
-			command.Run()
+			if err := command.Run(); err != nil {
+				fmt.Println("err", "hello")
+			}
 		},
 	}
 

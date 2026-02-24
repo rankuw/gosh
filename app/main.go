@@ -24,7 +24,18 @@ func main() {
 			fmt.Println(dir)
 		},
 		"cd": func(path []string) {
-			pathStr := filepath.Join(path...)
+			var pathStr string
+			if path[0] == "~" {
+				home, err := os.UserHomeDir()
+				if err != nil {
+
+				}
+
+				pathStr = home
+			} else {
+				pathStr = filepath.Join(path...)
+			}
+
 			err := os.Chdir(pathStr)
 
 			if err != nil {

@@ -15,3 +15,6 @@ A custom Unix shell implementation in Go. I am building this to master systems p
 ## 🏃 Run
 ```bash
 go run app/main.go
+
+
+sync_cc

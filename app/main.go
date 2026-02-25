@@ -9,6 +9,36 @@ import (
 	"strings"
 )
 
+func parseInput(input string) []string {
+	var args []string
+	var currentArg strings.Builder
+	inSingleQuotes := false
+	inArg := false
+
+	for i := 0; i < len(input); i++ {
+		ch := input[i]
+
+		if ch == '\'' {
+			inSingleQuotes = !inSingleQuotes
+			inArg = true
+		} else if (ch == ' ' || ch == '\t') && !inSingleQuotes {
+			if inArg {
+				args = append(args, currentArg.String())
+				currentArg.Reset()
+				inArg = false
+			}
+		} else {
+			inArg = true
+			currentArg.WriteByte(ch)
+		}
+	}
+	if inArg {
+		args = append(args, currentArg.String())
+	}
+
+	return args
+}
+
 func main() {
 	reader := bufio.NewReader(os.Stdin)
 
@@ -77,7 +107,11 @@ func main() {
 			continue
 		}
 
-		parts := strings.Fields(input)
+		parts := parseInput(input)
+		if len(parts) == 0 {
+			continue
+		}
+
 		cmd := parts[0]
 		args := parts[1:]
 

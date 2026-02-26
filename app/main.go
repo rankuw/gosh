@@ -13,15 +13,19 @@ func parseInput(input string) []string {
 	var args []string
 	var currentArg strings.Builder
 	inSingleQuotes := false
+	inDoubleQuotes := false
 	inArg := false
 
 	for i := 0; i < len(input); i++ {
 		ch := input[i]
 
-		if ch == '\'' {
+		if ch == '\'' && !inDoubleQuotes {
 			inSingleQuotes = !inSingleQuotes
 			inArg = true
-		} else if (ch == ' ' || ch == '\t') && !inSingleQuotes {
+		} else if ch == '"' && !inSingleQuotes {
+			inDoubleQuotes = !inDoubleQuotes
+			inArg = true
+		} else if (ch == ' ' || ch == '\t') && !inSingleQuotes && !inDoubleQuotes {
 			if inArg {
 				args = append(args, currentArg.String())
 				currentArg.Reset()

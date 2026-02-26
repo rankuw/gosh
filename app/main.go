@@ -147,11 +147,17 @@ func main() {
 
 		var args []string
 		var outFile string
+		var errFile string
 
 		for i := 0; i < len(parts); i++ {
 			if parts[i] == ">" || parts[i] == "1>" {
 				if i+1 < len(parts) {
 					outFile = parts[i+1]
+					i++
+				}
+			} else if parts[i] == "2>" {
+				if i+1 < len(parts) {
+					errFile = parts[i+1]
 					i++
 				}
 			} else {
@@ -167,15 +173,30 @@ func main() {
 		callArgs := args[1:]
 
 		var outWriter io.Writer = os.Stdout
-		var file *os.File
+		var outFilePtr *os.File
 		if outFile != "" {
 			var err error
-			file, err = os.OpenFile(outFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+			outFilePtr, err = os.OpenFile(outFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Error opening file: %v\n", err)
 				continue
 			}
-			outWriter = file
+			outWriter = outFilePtr
+		}
+
+		var errWriter io.Writer = os.Stderr
+		var errFilePtr *os.File
+		if errFile != "" {
+			var err error
+			errFilePtr, err = os.OpenFile(errFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error opening file: %v\n", err)
+				if outFilePtr != nil {
+					outFilePtr.Close()
+				}
+				continue
+			}
+			errWriter = errFilePtr
 		}
 
 		if handler, ok := builtins[cmd]; ok {
@@ -184,14 +205,18 @@ func main() {
 			command := exec.Command(cmd, callArgs...)
 			command.Stdout = outWriter
 			command.Stdin = os.Stdin
-			command.Stderr = os.Stderr
+			command.Stderr = errWriter
 			command.Run()
 		} else {
-			fmt.Println(cmd + ": command not found")
+			// For unrecognized commands, bash typically outputs command not found to stderr
+			fmt.Fprintln(errWriter, cmd+": command not found")
 		}
 
-		if file != nil {
-			file.Close()
+		if outFilePtr != nil {
+			outFilePtr.Close()
+		}
+		if errFilePtr != nil {
+			errFilePtr.Close()
 		}
 	}
 }

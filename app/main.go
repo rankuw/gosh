@@ -26,9 +26,22 @@ func parseInput(input string) []string {
 			continue
 		}
 
-		if ch == '\\' && !inSingleQuotes && !inDoubleQuotes {
-			escaped = true
-			inArg = true
+		if ch == '\\' {
+			if inSingleQuotes {
+				inArg = true
+				currentArg.WriteByte(ch)
+			} else if inDoubleQuotes {
+				if i+1 < len(input) && (input[i+1] == '\\' || input[i+1] == '"' || input[i+1] == '$' || input[i+1] == '`' || input[i+1] == '\n') {
+					escaped = true
+					inArg = true
+				} else {
+					inArg = true
+					currentArg.WriteByte(ch)
+				}
+			} else {
+				escaped = true
+				inArg = true
+			}
 			continue
 		}
 

@@ -15,9 +15,22 @@ func parseInput(input string) []string {
 	inSingleQuotes := false
 	inDoubleQuotes := false
 	inArg := false
+	escaped := false
 
 	for i := 0; i < len(input); i++ {
 		ch := input[i]
+
+		if escaped {
+			currentArg.WriteByte(ch)
+			escaped = false
+			continue
+		}
+
+		if ch == '\\' && !inSingleQuotes && !inDoubleQuotes {
+			escaped = true
+			inArg = true
+			continue
+		}
 
 		if ch == '\'' && !inDoubleQuotes {
 			inSingleQuotes = !inSingleQuotes
@@ -62,7 +75,7 @@ func main() {
 			if path[0] == "~" {
 				home, err := os.UserHomeDir()
 				if err != nil {
-
+					return
 				}
 
 				pathStr = home

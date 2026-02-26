@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -72,50 +73,52 @@ func parseInput(input string) []string {
 func main() {
 	reader := bufio.NewReader(os.Stdin)
 
-	builtins := map[string]func([]string){
-		"exit": func(_ []string) {
+	builtins := map[string]func([]string, io.Writer){
+		"exit": func(_ []string, _ io.Writer) {
 			os.Exit(0)
 		},
-		"echo": func(args []string) {
-			fmt.Println(strings.Join(args, " "))
+		"echo": func(args []string, out io.Writer) {
+			fmt.Fprintln(out, strings.Join(args, " "))
 		},
-		"pwd": func(_ []string) {
+		"pwd": func(_ []string, out io.Writer) {
 			dir, _ := os.Getwd()
-			fmt.Println(dir)
+			fmt.Fprintln(out, dir)
 		},
-		"cd": func(path []string) {
+		"cd": func(path []string, _ io.Writer) {
 			var pathStr string
-			if path[0] == "~" {
+			if len(path) > 0 && path[0] == "~" {
 				home, err := os.UserHomeDir()
 				if err != nil {
 					return
 				}
 
 				pathStr = home
-			} else {
+			} else if len(path) > 0 {
 				pathStr = filepath.Join(path...)
+			} else {
+				return
 			}
 
 			err := os.Chdir(pathStr)
 
 			if err != nil {
-				fmt.Printf("cd: %s: No such file or directory\n", pathStr)
+				fmt.Fprintf(os.Stderr, "cd: %s: No such file or directory\n", pathStr)
 			}
 		},
 	}
 
-	builtins["type"] = func(args []string) {
+	builtins["type"] = func(args []string, out io.Writer) {
 		if len(args) == 0 {
 			return
 		}
 
 		command := args[0]
 		if _, ok := builtins[command]; ok {
-			fmt.Println(command + " is a shell builtin")
+			fmt.Fprintln(out, command+" is a shell builtin")
 		} else if path, err := exec.LookPath(command); err == nil {
-			fmt.Println(command + " is " + path)
+			fmt.Fprintln(out, command+" is "+path)
 		} else {
-			fmt.Println(command + ": not found")
+			fmt.Fprintln(out, command+": not found")
 		}
 	}
 	for {
@@ -142,19 +145,53 @@ func main() {
 			continue
 		}
 
-		cmd := parts[0]
-		args := parts[1:]
+		var args []string
+		var outFile string
+
+		for i := 0; i < len(parts); i++ {
+			if parts[i] == ">" || parts[i] == "1>" {
+				if i+1 < len(parts) {
+					outFile = parts[i+1]
+					i++
+				}
+			} else {
+				args = append(args, parts[i])
+			}
+		}
+
+		if len(args) == 0 {
+			continue
+		}
+
+		cmd := args[0]
+		callArgs := args[1:]
+
+		var outWriter io.Writer = os.Stdout
+		var file *os.File
+		if outFile != "" {
+			var err error
+			file, err = os.OpenFile(outFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error opening file: %v\n", err)
+				continue
+			}
+			outWriter = file
+		}
 
 		if handler, ok := builtins[cmd]; ok {
-			handler(args)
+			handler(callArgs, outWriter)
 		} else if _, err := exec.LookPath(cmd); err == nil {
-			command := exec.Command(cmd, args...)
-			command.Stdout = os.Stdout
+			command := exec.Command(cmd, callArgs...)
+			command.Stdout = outWriter
 			command.Stdin = os.Stdin
 			command.Stderr = os.Stderr
 			command.Run()
 		} else {
 			fmt.Println(cmd + ": command not found")
+		}
+
+		if file != nil {
+			file.Close()
 		}
 	}
 }

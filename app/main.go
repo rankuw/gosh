@@ -148,11 +148,19 @@ func main() {
 		var args []string
 		var outFile string
 		var errFile string
+		var appendOut bool
 
 		for i := 0; i < len(parts); i++ {
 			if parts[i] == ">" || parts[i] == "1>" {
 				if i+1 < len(parts) {
 					outFile = parts[i+1]
+					appendOut = false
+					i++
+				}
+			} else if parts[i] == ">>" || parts[i] == "1>>" {
+				if i+1 < len(parts) {
+					outFile = parts[i+1]
+					appendOut = true
 					i++
 				}
 			} else if parts[i] == "2>" {
@@ -176,7 +184,13 @@ func main() {
 		var outFilePtr *os.File
 		if outFile != "" {
 			var err error
-			outFilePtr, err = os.OpenFile(outFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+			flags := os.O_WRONLY | os.O_CREATE
+			if appendOut {
+				flags |= os.O_APPEND
+			} else {
+				flags |= os.O_TRUNC
+			}
+			outFilePtr, err = os.OpenFile(outFile, flags, 0644)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Error opening file: %v\n", err)
 				continue

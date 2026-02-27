@@ -138,7 +138,6 @@ func main() {
 	for {
 
 		input, err := rl.Readline()
-		fmt.Println(input)
 
 		if err != nil {
 			if err == io.EOF {

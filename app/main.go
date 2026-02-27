@@ -1,13 +1,14 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/chzyer/readline"
 )
 
 func parseInput(input string) []string {
@@ -71,7 +72,6 @@ func parseInput(input string) []string {
 }
 
 func main() {
-	reader := bufio.NewReader(os.Stdin)
 
 	builtins := map[string]func([]string, io.Writer){
 		"exit": func(_ []string, _ io.Writer) {
@@ -121,13 +121,27 @@ func main() {
 			fmt.Fprintln(out, command+": not found")
 		}
 	}
-	for {
-		fmt.Print("$ ")
+	completer := readline.NewPrefixCompleter(
+		readline.PcItem("echo"),
+		readline.PcItem("exit"),
+	)
+	rl, err := readline.NewEx(&readline.Config{
+		Prompt:       "$ ",
+		AutoComplete: completer,
+	})
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error initializing readline:", err)
+		return
+	}
+	defer rl.Close()
 
-		input, err := reader.ReadString('\n')
+	for {
+
+		input, err := rl.Readline()
+		fmt.Println(input)
 
 		if err != nil {
-			if err.Error() == "EOF" {
+			if err == io.EOF {
 				os.Exit(0)
 			}
 

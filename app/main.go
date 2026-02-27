@@ -71,6 +71,18 @@ func parseInput(input string) []string {
 	return args
 }
 
+type bellCompleter struct {
+	inner readline.AutoCompleter
+}
+
+func (b *bellCompleter) Do(line []rune, pos int) (newLine [][]rune, length int) {
+	newLine, length = b.inner.Do(line, pos)
+	if len(newLine) == 0 {
+		fmt.Print("\a")
+	}
+	return
+}
+
 func main() {
 
 	builtins := map[string]func([]string, io.Writer){
@@ -121,10 +133,12 @@ func main() {
 			fmt.Fprintln(out, command+": not found")
 		}
 	}
-	completer := readline.NewPrefixCompleter(
-		readline.PcItem("echo"),
-		readline.PcItem("exit"),
-	)
+	completer := &bellCompleter{
+		inner: readline.NewPrefixCompleter(
+			readline.PcItem("echo"),
+			readline.PcItem("exit"),
+		),
+	}
 	rl, err := readline.NewEx(&readline.Config{
 		Prompt:       "$ ",
 		AutoComplete: completer,
